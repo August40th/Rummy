@@ -19,16 +19,10 @@ def main():
     print("Welcome to Rummy!")
 
     num_players = int(input("Enter the number of players: "))
-    while num_players < 2 or num_players > 22:
+    while num_players < 3 or num_players > 20:
         num_players = int(input("Invalid number of players. Enter a number between 2 and 22: "))
 
-    num_rounds = int(input("Enter the number of rounds to play: "))
-    while num_rounds < 1 or num_rounds > 10:
-        num_rounds = int(input("Invalid number of rounds. Enter a number between 1 and 10: "))
-
-    tables_per = input("Enter the basis for table assignment ('subsequent' or 'total'): ")
-    while tables_per not in ['subsequent', 'total']:
-        tables_per = input("Invalid input. Enter either 'subsequent' or 'total': ")
+    num_rounds = 7;
 
     num_tables = get_num_tables(num_players)
     players_per_table = get_players_per_table(num_players, num_tables, [], 1)
@@ -565,3 +559,12 @@ def sort_hand(hand):
 
     print("Sorted hand: ", hand)
   
+def get_num_tables(num_players):
+    if num_players < 8:
+        return 1
+    elif num_players < 13:
+        return 2
+    elif num_players < 18:
+        return 3
+    else:
+        return 4
