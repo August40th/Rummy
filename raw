@@ -15,35 +15,34 @@ def main():
     global buying_order
     global shanghai
 
-    # Number of players
-    MIN_PLAYERS = 3
-    MAX_PLAYERS = 20
-    num_players = None
+    global num_players, num_rounds, tables_per
+    print("Welcome to Rummy!")
 
-    while num_players is None:
-        try:
-            num_players = int(input("Enter number of players: "))
-            if num_players < MIN_PLAYERS or num_players > MAX_PLAYERS:
-                print(f"Number of players must be between {MIN_PLAYERS} and {MAX_PLAYERS}.")
-                num_players = None
-        except ValueError:
-            print("Invalid input. Please enter a number.")
+    num_players = int(input("Enter the number of players: "))
+    while num_players < 2 or num_players > 22:
+        num_players = int(input("Invalid number of players. Enter a number between 2 and 22: "))
 
-    # Number of decks
-    num_decks = 1
-    if extra_decks:
-        while True:
-            try:
-                num_decks = int(input("Enter number of decks: "))
-                if num_decks < 1:
-                    print("Number of decks must be at least 1.")
-                else:
-                    break
-            except ValueError:
-                print("Invalid input. Please enter a number.")
+    num_rounds = int(input("Enter the number of rounds to play: "))
+    while num_rounds < 1 or num_rounds > 10:
+        num_rounds = int(input("Invalid number of rounds. Enter a number between 1 and 10: "))
 
-    # Set up tables and players for the first round
-    tables, players = assign_tables_and_seats()
+    tables_per = input("Enter the basis for table assignment ('subsequent' or 'total'): ")
+    while tables_per not in ['subsequent', 'total']:
+        tables_per = input("Invalid input. Enter either 'subsequent' or 'total': ")
+
+    num_tables = get_num_tables(num_players)
+    players_per_table = get_players_per_table(num_players, num_tables, [], 1)
+
+    print("Dealing cards...")
+    decks = initialize_decks()
+    draw_pile = []
+    for deck in decks:
+        draw_pile.extend(deck)
+    random.shuffle(draw_pile)
+    deal_cards(players_per_table, draw_pile)
+
+    print("Initializing discard piles...")
+    discard_piles = initialize_discard(num_tables)
 
     # Start the game loop
     for round_num in range(1, 8):
@@ -565,113 +564,4 @@ def sort_hand(hand):
         hand[start:end+1] = sorted(hand[start:end+1], key=lambda x: x[1])
 
     print("Sorted hand: ", hand)
-    
-def deal_cards(table, draw_pile):
-    for player in table:
-        for i in range(10):
-            card = draw_pile.pop(0)  # remove top card from draw pile
-            player['hand'].append(card)  # add card to player's hand
-            
-def initialize_decks():
-    global decks
-    decks = []
-    for table in range(1, num_tables + 1):
-        num_decks = get_table_decks(table)
-        table_decks = []
-        for deck in range(num_decks):
-            # create a standard deck of 52 cards
-            deck = []
-            suits = ['clubs', 'diamonds', 'spades', 'hearts']
-            for suit in suits:
-                for rank in range(1, 14):
-                    card = (suit, rank)
-                    deck.append(card)
-            table_decks.extend(deck)
-        random.shuffle(table_decks)
-        decks.append(table_decks)
-
-def initialize_discard(num_tables):
-    discard_piles = [[] for i in range(num_tables)]
-    return discard_piles
-
-def create_deck():
-    suits = ['clubs', 'diamonds', 'spades', 'hearts']
-    ranks = ['ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king']
-    deck = []
-    for suit in suits:
-        for rank in ranks:
-            card = rank + ' of ' + suit
-            deck.append(card)
-    return deck
-
-def get_number_of_decks(num_players):
-    if num_players < 5:
-        return 2
-    elif num_players < 7:
-        return 3
-    else:
-        return 4
-
-def get_table_decks(num_players, num_tables):
-    players_per_table = get_players_per_table(num_players, num_tables)
-    table_decks = []
-    for i in range(num_tables):
-        table_players = players_per_table[i]
-        table_decks.append(get_number_of_decks(table_players))
-    return table_decks
-    
-def get_players_per_table(players, tables, scores, round_num):
-    """
-    Distributes players among the tables based on their scores.
-    For round one, players are randomly distributed among tables.
-    For subsequent rounds, players are distributed based on their
-    score from either the subsequent round played or their total
-    score for all played rounds so far, based on the variable
-    "tables_per" being set to 'subsequent' or 'total' respectively.
-    """
-
-    players_per_table = math.ceil(players / tables)
-    remaining_players = players
-    table_assignments = []
-
-    # For round one, randomly assign players to tables
-    if round_num == 1:
-        for i in range(tables):
-            if i == tables - 1:
-                table_assignments.append(list(range(remaining_players)))
-            else:
-                table_assignments.append(
-                    random.sample(range(remaining_players), players_per_table)
-                )
-                remaining_players -= players_per_table
-
-    # For subsequent rounds, assign players to tables based on scores
-    else:
-        if tables_per == "subsequent":
-            scores = scores[round_num - 2]
-        elif tables_per == "total":
-            scores = [sum(scores[:round_num-1][i]) for i in range(players)]
-
-        # Assign players to tables based on their score
-        sorted_indices = sorted(range(players), key=lambda k: scores[k])
-        sorted_scores = [scores[i] for i in sorted_indices]
-
-        for i in range(tables):
-            if i == tables - 1:
-                table_assignments.append(sorted_indices)
-            else:
-                start_index = i * players_per_table
-                end_index = start_index + players_per_table
-                table_assignments.append(sorted_indices[start_index:end_index])
-
-def get_num_tables(num_players):
-    if num_players < 8:
-        return 1
-    elif num_players < 13:
-        return 2
-    elif num_players < 18:
-        return 3
-    else:
-        return 4
-
-num_tables = get_num_tables(num_players)
+  
