@@ -1,0 +1,392 @@
+import random
+
+# Create a deck of cards
+suits = ["D", "H", "C", "S"]
+ranks = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"]
+deck = [rank + suit for suit in suits for rank in ranks] * 2
+
+# Shuffle the deck
+random.shuffle(deck)
+
+# Initialize discard pile
+discard_pile = []
+
+# Initialize player data = name, hand, play_area, laid_down, buy_count
+player_data = [   
+    ["Alice", [], [], False, 0],
+    ["Bob", [], [], False, 0],
+    ["Charlie", [], [], False, 0],
+    ["Dawn", [], [], False, 0]
+]
+
+# Deal cards to players
+def deal_cards(deck, player_data):
+    for i in range(10):
+        for j in range(4):
+            card = deck.pop(0)
+            player_data[j][1].append(card)
+
+    # Print player hands
+    for player in player_data:
+        print(player[0] + "'s Hand:", player[1])
+
+    # Return updated deck and player data
+    return deck, player_data
+    
+# Deal cards to p,==layers
+deck, player_data = deal_cards(deck, player_data)
+
+# Define a function to check for sets in a player's hand and lay down the two highest ranking sets
+def lay_down_sets(current_player_index):
+    current_player = player_data[current_player_index][0]
+    hand = player_data[current_player_index][1]
+    play_area = [player_data[i][2] for i in range(len(player_data))]
+    if play_area:
+        print(play_area)
+
+    # Check if the player has already laid down two sets
+    if player_data[current_player_index][3] == True:
+        return
+
+    # Create a dictionary to count the number of cards of each rank in the hand
+    rank_counts = {}
+    for card in hand:
+        rank = card[:-1]
+        rank_counts[rank] = rank_counts.get(rank, 0) + 1
+
+    # Find all sets of two or more cards in the hand
+    sets = []
+    for rank, count in rank_counts.items():
+        if count >= 3:
+            set_cards = [card for card in hand if card[:-1] == rank]
+            sets.append(set_cards)
+
+    # Sort the sets by rank in descending order
+    sets.sort(key=lambda set_cards: ranks.index(set_cards[0][:-1]), reverse=True)
+    
+    # Check if the player has any sets to lay down
+    if len(sets) < 2:
+        for set_cards in sets:
+            if len(set_cards) >= 6:
+                new_set = [set_cards.pop() for _ in range(3)]
+                sets.append(new_set)
+                sets.append(set_cards)
+                print("split set of 6+")
+        if len(sets) < 2:
+            return
+                
+    # Check if the player has more than two sets
+    if len(sets) == 2:
+        for set_cards in sets:
+            for card in set_cards:
+                hand.remove(card)
+                player_data[current_player_index][2].append(card)
+        print(current_player, " laid down ", sets, "only 2")
+    else:
+        backup = sets
+        for laid_set in play_area:
+            for card in sets:
+                if card[0][:-1] == laid_set[:-1]:
+                    sets.remove(card)
+            if len(sets) > 2:
+                backup = sets
+        if len(sets) < 2:
+            sets = backkup
+        lowest_set = None
+        for set_cards in sets:
+            if lowest_set is None or ranks.index(set_cards[0][:-1]) < ranks.index(lowest_set[0][:-1]):
+                if not any(lowest_set is not None and lowest_set[0][:-1] == set_card[0][:-1] for set_card in play_area):
+                    lowest_set = set_cards
+        second_lowest_set = None
+        for set_cards in sets:
+            if set_cards == lowest_set:
+                continue
+            if second_lowest_set is None or ranks.index(set_cards[0][:-1]) < ranks.index(second_lowest_set[0][:-1]):
+                if not any(second_lowest_set is not None and second_lowest_set[0][:-1] == set_card[0][:-1] for set_card in play_area):
+                    second_lowest_set = set_cards
+        # Lay down the two highest ranking sets
+        if lowest_set is not None and second_lowest_set is not None:
+            for set_ in [lowest_set, second_lowest_set]:
+                for card in set_:
+                    hand.remove(card)
+                    player_data[current_player_index][2].append(card)
+            print(current_player, " laid down ", lowest_set, second_lowest_set, "2 highest")
+        else:
+            for set_ in sets[-2:]:
+                for card in set_:
+                    hand.remove(card)
+                    player_data[current_player_index][2].append(card)
+            print(current_player, " laid down ", sets[-2:], "else two highest")
+                        
+def play_card(current_player_hand):
+    for i in range(len(player_data)):
+        name, hand, play_area, down, buys = player_data[i]
+        card_index = 0
+        while len(current_player_hand) > 1 and card_index < len(current_player_hand):
+            card = current_player_hand[card_index]
+            if card not in current_player_hand:
+                card_index = 0
+                continue
+            for set_cards in play_area:
+                if card[:-1] == set_cards[:-1] and card in current_player_hand:
+                    current_player_hand.remove(card)
+                    play_area.append(card)
+                    play_area.sort(key=lambda card: ranks.index(card[:-1]), reverse=True)
+                    print(card, " was added to", name, "'s set")
+                    card_index = 0
+                    break
+            else:
+                card_index += 1
+                
+def buy_card(current_player_index):
+    current_player = player_data[current_player_index][0]
+    current_player_hand = player_data[current_player_index][1]
+    next_player = player_data[(current_player_index + 1) % len(player_data)][0]
+    nextnext_player = player_data[(current_player_index + 2) % len(player_data)][0]
+    next_player_hand = player_data[(current_player_index + 1) % len(player_data)][1]
+    nextnext_player_hand = player_data[(current_player_index + 2) % len(player_data)][1]
+    play_area = [player_data[i][2] for i in range(len(player_data))]
+    next_area = player_data[(current_player_index + 1) % len(player_data)][2]
+    nextnext_area = player_data[(current_player_index + 2) % len(player_data)][2]
+  
+    # Check if player has too many cards in hand
+    if player_data[(current_player_index + 1) % len(player_data)][4] >= 3:
+        next_card_limit = True
+        print(next_player, " has reached buy limit")
+    else:
+        next_card_limit = False
+    if player_data[(current_player_index + 2) % len(player_data)][4] >= 3:
+        nextnext_card_limit = True
+        print(nextnext_player, " has reached buy limit")
+    else:
+        nextnext_card_limit = False
+    
+    # Check if player can buy top card from discard pile
+    top_card = discard_pile[-1] if discard_pile else None
+    veto = False
+    if top_card:
+        for rank in [card for card in current_player_hand if card[:-1] == top_card[:-1]]:
+            if len([card for card in current_player_hand if card[:-1] == rank[:-1]]) == 2 or len([card for card in current_player_hand if card[:-1] == rank[:-1]]) == 5:
+                if len(current_player_hand) >= 10 or rank in [card for card in play_area if card[:-1] == top_card[:-1]]:
+                    veto = True
+                    break
+            rank = ""
+            
+    next_counts = {}
+    for card in next_player_hand:
+        rank = card[:-1]
+        next_counts[rank] = next_counts.get(rank, 0) + 1
+    nextnext_counts = {}
+    for card in nextnext_player_hand:
+        rank = card[:-1]
+        nextnext_counts[rank] = nextnext_counts.get(rank, 0) + 1
+    nextsets = []
+    for rank, count in next_counts.items():
+        if count >= 3:
+            set_cards = [card for card in next_player_hand if card[:-1] == rank]
+            nextsets.append(set_cards)
+    nextnextsets = []
+    for rank, count in nextnext_counts.items():
+        if count >= 3:
+            set_cards = [card for card in nextnext_player_hand if card[:-1] == rank]
+            nextnextsets.append(set_cards)
+
+    # Check if next players can buy top card from discard pile
+    player_bought = False
+    
+    if top_card and veto == False:
+        for rank in [card for card in next_player_hand if card[:-1] == top_card[:-1]]:
+            if len([card for card in next_player_hand if card[:-1] == rank[:-1]]) == 2 or len([card for card in next_player_hand if card[:-1] == rank[:-1]]) == 5:
+                if next_card_limit == False and len(next_area) == 0 and player_bought == False and len(nextsets) < 2:
+                    buy_card = top_card
+                    if len(discard_pile) == 1:
+                        discard_pile.remove(discard_pile[-1])
+                    elif len(discard_pile) > 1:
+                        discard_pile.remove(discard_pile[len(discard_pile) - 1])
+                    interest_card = deck.pop(0)
+                    next_player_hand.append(buy_card)
+                    next_player_hand.append(interest_card)
+                    print(next_player, "bought the last discard", buy_card)
+                    player_bought = True
+                    player_data[(current_player_index + 1) % len(player_data)][4] += 1
+            rank = ""
+        for rank in [card for card in nextnext_player_hand if card[:-1] == top_card[:-1]]:
+            if len([card for card in nextnext_player_hand if card[:-1] == rank[:-1]]) == 2 or len([card for card in nextnext_player_hand if card[:-1] == rank[:-1]]) == 5:
+                if nextnext_card_limit == False and player_bought == False and len(nextnext_area) == 0 and len(nextnextsets) < 2:
+                    buy_card = top_card
+                    if len(discard_pile) == 1:
+                        discard_pile.remove(discard_pile[-1])
+                    elif len(discard_pile) > 1:
+                        discard_pile.remove(discard_pile[len(discard_pile) - 1])
+                    interest_card = deck.pop(0)
+                    nextnext_player_hand.append(buy_card)
+                    nextnext_player_hand.append(interest_card)
+                    print(nextnext_player, "bought the last discard", buy_card)
+                    player_data[(current_player_index + 2) % len(player_data)][4] += 1
+                    player_bought = True
+            rank = ""
+            
+# Define a function to check if a player's hand is empty and exit the game if so
+def check_for_empty_hand(current_player, current_player_hand):
+    if len(current_player_hand) == 0:
+        print(current_player, "won the round !")
+        for score_hands in player_hands:
+            score = 0
+            for card in [card for card in score_hands]:
+                if card[:-1] == "A":
+                    score = score + 15
+                elif card[:-1] == "K" or card[:-1] == "Q" or card[:-1] == "J" or card[:-1] == "10":
+                    score = score + 10
+                elif card[:-1] == "9":
+                    score = score + 9
+                elif card[:-1] == "8":
+                    score = score + 8
+                elif card[:-1] == "7":
+                    score = score + 7
+                elif card[:-1] == "6":
+                    score = score + 6
+                elif card[:-1] == "5":
+                    score = score + 5
+                elif card[:-1] == "4":
+                    score = score + 4
+                elif card[:-1] == "3":
+                    score = score + 3
+                elif card[:-1] == "2":
+                    score = score + 2
+            if score_hands == player_data[0][1]:
+                print("Alice's score: ", score)
+            elif score_hands == player_data[1][1]:
+                print("Bob's score: ", score)
+            elif score_hands == player_data[2][1]:
+                print("Charlie's score: ", score)
+            elif score_hands == player_data[3][1]:
+                print("Dawn's score: ", score)
+        exit()
+
+# Players draw and discard cards
+players = ["Alice", "Bob", "Charlie", "Dawn"]
+player_hands = [player_data[i][1] for i in range(len(player_data))]
+current_player_index = 0
+
+while True:
+    current_player = player_data[current_player_index][0]
+    current_player_hand = player_data[current_player_index][1]
+    current_player_play_area = player_data[current_player_index][2]
+    current_player_laid_down = player_data[current_player_index][3]
+
+    #Check for buyers
+    if discard_pile:
+        print("Anyone buying ?")
+        buy_card(current_player_index)
+    
+    print("\n" + current_player + "'s turn to draw") 
+    current_player_hand.sort(key=lambda card: ranks.index(card[:-1]), reverse=True)
+    print(current_player, "'s Hand:", current_player_hand)
+    drawn_card = []
+    cards_match = []
+    play_area = [player_data[i][2] for i in range(len(player_data))]
+    if discard_pile:
+        top_card = discard_pile[len(discard_pile) - 1]
+        cards_match = [card for card in current_player_hand if card[:-1] == top_card[:-1]]
+    else:
+        top_card = []
+
+    if current_player_laid_down == True and discard_pile:
+        # Check if top discard card is higher rank than the lowest ranking card in player's hand
+        if any([card for card in play_area if card[:-1] == top_card[:-1]]):
+            drawn_card = discard_pile.pop()
+            current_player_hand.append(drawn_card)
+            print(current_player + " drew", drawn_card, "from the discard pile to play in set")
+        elif ranks.index(top_card[:-1]) > ranks.index(current_player_hand[-1][:-1]):
+            drawn_card = discard_pile.pop()
+            current_player_hand.append(drawn_card)
+            print(current_player + " drew", drawn_card, "from the discard pile cause lower")
+    elif current_player_laid_down == False and discard_pile:
+        if len(cards_match) >= 2:
+            print(cards_match)
+            cards_match.clear()
+            drawn_card = discard_pile.pop()
+            current_player_hand.append(drawn_card)
+            print(current_player + " drew", drawn_card, "from the discard pile cause match pair for set")
+    if len(drawn_card) == 0:
+        drawn_card = deck.pop(0)
+        current_player_hand.append(drawn_card)
+        print(current_player + " drew", drawn_card, "from the deck")
+    cards_match.clear()
+    
+    player_sets = player_data[current_player_index][2]
+    player_hand = player_data[current_player_index][1]
+    if player_sets:
+        print(current_player + "'s sets:", player_sets)
+    print(current_player + "'s Hand:", player_hand)
+        
+    # Check for sets and lay down if the player hasn't laid down already
+    if player_data[current_player_index][3] == False:
+        lay_down_sets(current_player_index)
+    if len(player_data[current_player_index][2]) > 0:
+        player_data[current_player_index][3] = True
+ 
+    if player_data[current_player_index][3] == True:
+        play_card(current_player_hand)
+ 
+    # Player discards a card
+    discard_choice = None
+    pairs = []
+    sets = []
+    potential_discard = []
+
+    if len(current_player_hand) <= 10:
+        current_player_hand.sort(key=lambda card: ranks.index(card[:-1]))
+        rank_cards = [card for card in current_player_hand]
+        potential_discard.append(rank_cards)
+    else:
+        for rank in ranks:
+            current_player_hand.sort(key=lambda card: ranks.index(card[:-1]))
+            rank_cards = [card for card in current_player_hand if card.startswith(rank)]
+            if len(rank_cards) == 1:
+                potential_discard.append(rank_cards)
+        if not potential_discard:
+            for rank in ranks:
+                rank_cards = [card for card in current_player_hand if card.startswith(rank)]
+                if len(rank_cards) == 4 or len(rank_cards) == 5:
+                    potential_discard.append(rank_cards)
+        if not potential_discard:
+            for rank in ranks:
+                rank_cards = [card for card in current_player_hand if card.startswith(rank)]
+                if len(rank_cards) == 2:
+                    potential_discard.append(rank_cards)
+        if not potential_discard:
+            for rank in ranks:
+                rank_cards = [card for card in current_player_hand if card.startswith(rank)]
+                if len(rank_cards) == 3:
+                    potential_discard.append(rank_cards)
+    last_check = potential_discard
+    if len(potential_discard) > 0:
+        for sets in play_area:
+            for card in potential_discard:
+                if card[0][:-1] == sets[:-1]:
+                    potential_discard.remove(card)
+    if len(potential_discard) == 0 and len(current_player_hand) > 1:
+        potential_discard = last_check
+        discard_choice = current_player_hand[len(current_player_hand) - 1]
+    # Remove the card from player's hand and discard it
+    elif len(current_player_hand) > 1:
+        discard_choice = potential_discard[0][0]
+    else:
+        discard_choice = current_player_hand[0]
+    current_player_hand.remove(discard_choice)
+    discard_pile.append(discard_choice)
+    print(current_player + " discarded", discard_choice)
+    if len(current_player_hand) == 0:
+        check_for_empty_hand(current_player, current_player_hand)
+            
+    # if deck empty collect discards and shuffle twice
+    if not deck:
+        deck = discard_pile[4:]
+        discard_pile = discard_pile[:4]
+        random.shuffle(deck)
+        random.shuffle(deck)
+        print("Discard pile", discard_pile)
+
+    # Switch to next player
+    current_player_index = (current_player_index + 1) % 4
