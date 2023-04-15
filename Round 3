@@ -1,0 +1,317 @@
+import random
+
+# Create a deck of cards
+suits = ["D", "H", "C", "S"]
+ranks = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"]
+deck = [rank + suit for suit in suits for rank in ranks] * 2
+
+# Shuffle the deck
+random.shuffle(deck)
+
+# Initialize discard pile
+discard_pile = []
+
+# Initialize player data = name, hand, play_area, laid_down, buy_count
+player_data = [   
+    ["Alice", [], [], False, 0],
+    ["Bob", [], [], False, 0],
+    ["Charlie", [], [], False, 0],
+    ["Dawn", [], [], False, 0]
+]
+
+# Deal cards to players
+def deal_cards(deck, player_data):
+    for i in range(10):
+        for j in range(4):
+            card = deck.pop(0)
+            player_data[j][1].append(card)
+
+    # Print player hands
+    for player in player_data:
+        print(player[0] + "'s Hand:", player[1])
+
+    # Return updated deck and player data
+    return deck, player_data
+    
+# Deal cards to players
+deck, player_data = deal_cards(deck, player_data)
+
+def draw_card():
+    print("\n" + player_data[turn_index][0] + "'s turn to draw")
+    player_data[turn_index][1].sort(key=lambda card: (suits.index(card[-1]), ranks.index(card[:-1])), reverse=True)
+    print(player_data[turn_index][0], "'s Hand:", player_data[turn_index][1])
+
+    if discard_pile:
+        top_card = discard_pile[-1]
+        suit_matches = [card for card in player_data[turn_index][1] if card[-1] == top_card[-1]]
+        rank_matches = [card for card in player_data[turn_index][1] if card[:-1] == top_card[:-1]]
+    else:
+        drawn_card = deck.pop(0)
+        player_data[turn_index][1].append(drawn_card)
+        print(player_data[turn_index][0] + " drew", drawn_card, "from the deck")
+        return
+
+    if player_data[turn_index][3] == True and discard_pile:
+        matching_suits = [card for player in player_data for card in player[2] if card[-1] == top_card[-1]]
+        if matching_suits and (ranks.index(top_card[:-1]) == min([ranks.index(card[:-1]) for card in matching_suits])-1 or ranks.index(top_card[:-1]) == max([ranks.index(card[:-1]) for card in matching_suits])+1):
+            drawn_card = discard_pile.pop()
+            player_data[turn_index][1].append(drawn_card)
+            print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile to play in set")
+        elif ranks.index(top_card[:-1]) > ranks.index(player_data[turn_index][1][-1][:-1]):
+            drawn_card = discard_pile.pop()
+            player_data[turn_index][1].append(drawn_card)
+            print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile cause lower")
+        else:
+            drawn_card = deck.pop(0)
+            player_data[turn_index][1].append(drawn_card)
+            print(player_data[turn_index][0] + " drew", drawn_card, "from the deck")
+    elif player_data[turn_index][3] == False and discard_pile:
+        potential_suits = set([card[-1] for card in player_data[turn_index][1] if player_data[turn_index][1].count(card) >= 2])
+        for suit in potential_suits:
+            matching_ranks = sorted([card[:-1] for card in player_data[turn_index][1] if card[-1] == suit])
+            if len(matching_ranks) >= 3:
+                for i in range(len(matching_ranks)-2):
+                    if ranks.index(matching_ranks[i]) == ranks.index(matching_ranks[i+1])-1 == ranks.index(matching_ranks[i+2])-2:
+                        for card in discard_pile:
+                            if card[-1] == suit and card[:-1] not in matching_ranks and (ranks.index(card[:-1]) == ranks.index(matching_ranks[-1])+1 or ranks.index(card[:-1]) == ranks.index(matching_ranks[0])-1):
+                                drawn_card = discard_pile.pop(discard_pile.index(card))
+                                player_data[turn_index][1].append(drawn_card)
+                                print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile to form a set")
+        if len(player_data[turn_index][1]) % 2 == 0:
+            drawn_card = deck.pop(0)
+            player_data[turn_index][1].append(drawn_card)
+            print(player_data[turn_index][0] + " drew", drawn_card, "from the deck")
+    player_data[turn_index][1].sort(key=lambda card: (suits.index(card[-1]), ranks.index(card[:-1])), reverse=True)
+
+# Define a function to check for sets in a player's hand and lay down the two highest ranking sets
+def lay_down():
+    # Create a dictionary of suits with their respective cards
+    suits = {"C": [], "D": [], "H": [], "S": []}
+    for card in player_data[turn_index][1]:
+        suits[card[-1]].append(card)
+    
+    # Check for runs of 4 or more cards of the same suit in sequential order
+    runs = []
+    for suit, cards in suits.items():
+        if not cards:
+            continue
+        cards = sorted(cards, key=lambda x: ranks.index(x[:-1]))
+        current_run = []
+        for i in range(len(cards) - 1):
+            current_run.append(cards[i])
+            if ranks.index(cards[i][:-1]) + 1 != ranks.index(cards[i+1][:-1]):
+                if len(current_run) >= 4:
+                    runs.append(current_run)
+                current_run = []
+        current_run.append(cards[-1])
+        if len(current_run) >= 4:
+            runs.append(current_run)
+        
+    # Lay down exactly two runs, if possible
+    if len(runs) >= 2:
+        # Sort runs by length and rank, in descending order
+        runs = sorted(runs, key=lambda x: (len(x), ranks.index(x[0][:-1])), reverse=True)
+        for set_ in runs[:2]:
+            for card in set_:
+                if len(player_data[turn_index][1]) > 1:
+                    player_data[turn_index][1].remove(card)
+                    player_data[turn_index][2].append(card)
+        print(player_data[turn_index][0], " laid down ", runs[:2], "2 highest runs")
+
+def play_card():
+    for i in range(len(player_data)):
+        hand = player_data[turn_index][1]
+        name = player_data[i][0]
+        for card in hand:
+            for run in player_data[i][2]:
+                if card[-1] == run[-1] and card[:-1] in ranks and run[:-1] in ranks:
+                    card_rank_index = ranks.index(card[:-1])
+                    run_rank_index = ranks.index(run[:-1])
+                    if (run_rank_index == 0 and card_rank_index == len(ranks) - 1) or \
+                       (run_rank_index == len(ranks) - 1 and card_rank_index == 0) or \
+                       (run_rank_index != 0 and run_rank_index != len(ranks) - 1 and \
+                        card_rank_index == run_rank_index + 1) or \
+                       (run_rank_index != 0 and run_rank_index != len(ranks) - 1 and \
+                        card_rank_index == run_rank_index - 1):
+                        player_data[turn_index][1].remove(card)
+                        player_data[i][2].append(card)
+                        player_data[i][2].sort(key=lambda card: ranks.index(card[:-1]))
+                        print(card, " was added to", name, "'s run")
+                        return
+                
+def discard_card():
+    hand = player_data[turn_index][1]
+    hand.sort(key=lambda card: (suits.index(card[-1])))
+    
+    if player_data[turn_index][3] == True:
+        potential_discards = hand
+        potential_discards.sort(key=lambda card: ranks.index(card[:-1]))
+        discard_choice = potential_discards[0]
+        return discard_choice
+
+    # Check for duplicates in the hand
+    for i in range(len(hand)):
+        if hand.count(hand[i]) > 1:
+            print("duplicate")
+            return hand[i] 
+            
+    # Identify cards that are the only ones of their suit in the hand
+    last = None
+    count = 0
+    for card in hand:
+        if last == None:
+            last = card
+            continue
+        elif last == card:
+            continue
+        else: 
+            if card[len(card) - 1] == last[len(last) - 1]:
+                count += 1
+                continue
+            else:
+                if count == 0 :
+                    print("lone card of suit")
+                    return last
+                last = card
+                count = 0
+                continue
+    if count == 0 and last != None:
+        print("lone card of suit")
+        return last
+            
+    # Identify potential cards for each suit
+    card_ranks = {'1': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14}
+    potential_discards = hand.copy()
+    
+    for card1 in hand:
+        for card2 in hand:
+            if card1 == card2:
+                continue
+            if card1[len(card1) - 1] == card2[len(card2) -1]:
+                if card1[0].isdigit() and card1[0] != "1":
+                    rank1 = int(card1[0])
+                else:
+                    rank1 = card_ranks[card1[0]]
+                if card2[0].isdigit() and card2[0] != "1":
+                    rank2 = int(card2[0])
+                else:
+                    rank2 = card_ranks[card2[0]]
+                if abs(rank1 - rank2) <= 4:
+                    if card1 in potential_discards:
+                        potential_discards.remove(card1)
+                    if card2 in potential_discards:
+                        potential_discards.remove(card2)
+    if len(potential_discards) == 0:
+        potential_discards = hand.copy()
+        for card1 in hand:
+            for card2 in hand:
+                if card1 == card2:
+                    continue
+                if card1[len(card1) - 1] == card2[len(card2) -1]:
+                    if card1[0].isdigit() and card1[0] != "1":
+                        rank1 = int(card1[0])
+                    else:
+                        rank1 = card_ranks[card1[0]]
+                    if card2[0].isdigit() and card2[0] != "1":
+                        rank2 = int(card2[0])
+                    else:
+                        rank2 = card_ranks[card2[0]]
+                    if abs(rank1 - rank2) <= 3:
+                        if card1 in potential_discards:
+                            potential_discards.remove(card1)
+                        if card2 in potential_discards:
+                            potential_discards.remove(card2)
+    if len(potential_discards) == 0:
+        potential_discards = hand.copy()
+        for card1 in hand:
+            for card2 in hand:
+                if card1 == card2:
+                    continue
+                if card1[len(card1) - 1] == card2[len(card2) -1]:
+                    if card1[0].isdigit() and card1[0] != "1":
+                        rank1 = int(card1[0])
+                    else:
+                        rank1 = card_ranks[card1[0]]
+                    if card2[0].isdigit() and card2[0] != "1":
+                        rank2 = int(card2[0])
+                    else:
+                        rank2 = card_ranks[card2[0]]
+                    if abs(rank1 - rank2) <= 2:
+                        if card1 in potential_discards:
+                            potential_discards.remove(card1)
+                        if card2 in potential_discards:
+                            potential_discards.remove(card2)
+    if len(potential_discards) == 0:
+        suitlist = {'S': [], 'C': [], 'D': [], 'H': []}
+        for card in hand:
+            suit = card[len(card) - 1]
+            suitlist[suit].append(card)
+        print(suitlist, "suit list")
+        for suit in suitlist:
+            if len(suitlist[suit]) >= 5:
+                suitlist[suit].sort()
+                potential_discards.append(suitlist[suit][0])
+    if len(potential_discards) == 0:
+        for suit, cards in suitlist.items():
+            if len(cards) == 2:
+                potential_discards.extend(cards)
+
+    # Choose the highest-ranked potential discard
+    if len(potential_discards) > 0:
+        potential_discards.sort(key=lambda card: ranks.index(card[:-1]))
+        print(potential_discards, "pot discards")
+        discard_choice = potential_discards[0]
+        return discard_choice
+        
+# Define a function to check if a player's hand is empty and exit the game if so
+def check_for_empty_hand():
+    if len(player_data[turn_index][1]) == 0:
+        print(player_data[turn_index][0], "won the round !")
+        for i in range(len(player_data)):
+            hand = player_data[i][1]
+            score = 0
+            score = sum(15 if card[:-1] == "A" else (int(card[:-1]) if card[:-1].isdigit() else 10) for card in hand)
+            print(player_data[i][0], "'s score: ", score)
+        exit()
+
+# Set starting player
+turn_index = 0
+
+while True:
+#Start play
+    
+    draw_card()
+  
+    if player_data[turn_index][2]:
+        print(player_data[turn_index][0] + "'s sets:", player_data[turn_index][2])
+    print(player_data[turn_index][0] + "'s Hand:", player_data[turn_index][1])
+        
+    # Check for sets and lay down if the player hasn't laid down already
+    if player_data[turn_index][3] == False:
+        lay_down()
+    # Set laid down to true
+    if len(player_data[turn_index][2]) > 0:
+        player_data[turn_index][3] = True
+ 
+    if player_data[turn_index][3] == True:
+        play_card()
+    
+    discard_choice = discard_card()
+    print(discard_choice)
+    discard_pile.append(discard_choice)
+    player_data[turn_index][1].remove(discard_choice)
+    print(player_data[turn_index][0] + " discarded", discard_choice)
+    
+    if len(player_data[turn_index][1]) == 0:
+        check_for_empty_hand()
+  
+    # if deck empty collect discards and shuffle twice
+    if not deck:
+        deck = discard_pile[4:]
+        discard_pile = discard_pile[:4]
+        random.shuffle(deck)
+        random.shuffle(deck)
+        print("Discard pile", discard_pile)
+
+    # Switch to next player
+    turn_index = (turn_index + 1) % 4
