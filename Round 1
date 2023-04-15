@@ -51,11 +51,14 @@ def draw_card():
         top_card = []
 
     if player_data[turn_index][3] == True and discard_pile:
-        if any([card for card in player_data[i][2] for i in range(len(player_data)) if card[:-1] == top_card[:-1]]):
-            drawn_card = discard_pile.pop()
-            player_data[turn_index][1].append(drawn_card)
-            print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile to play in set")
-        elif ranks.index(top_card[:-1]) > ranks.index(hand[-1][:-1]):
+        for i in range(len(player_data)):
+            for card in player_data[i][2]:
+                if card[:-1] == top_card[:-1]:
+                    drawn_card = discard_pile.pop()
+                    player_data[turn_index][1].append(drawn_card)
+                    print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile to play in set")
+                    return
+        if ranks.index(top_card[:-1]) > ranks.index(hand[-1][:-1]):
             drawn_card = discard_pile.pop()
             player_data[turn_index][1].append(drawn_card)
             print(player_data[turn_index][0] + " drew", drawn_card, "from the discard pile cause lower")
@@ -175,12 +178,14 @@ def buy_card():
     if top_card:
         for rank in [card for card in player_data[turn_index][1] if card[:-1] == top_card[:-1]]:
             if len([card for card in player_data[turn_index][1] if card[:-1] == rank[:-1]]) == 2 or len([card for card in player_data[turn_index][1] if card[:-1] == rank[:-1]]) == 5:
-                if len(player_data[turn_index][1]) >= 10 or rank in [card for card in player_data[i][2] for i in range(len(player_data)) if card[:-1] == top_card[:-1]]:
-                    veto = True
-                    break
+                if player_data[turn_index][3] == False:
+                    for i in range(len(player_data)):
+                        for card in player_data[i][2]:
+                            if card[:-1] == top_card[:-1]:
+                                veto = True
+                                print(player_data[turn_index][0], " vetoed the buying process")
+                                break
             rank = ""
-    
-    # 
     next_counts = {}
     for card in player_data[(turn_index + 1) % len(player_data)][1]:
         rank = card[:-1]
@@ -272,7 +277,7 @@ def discard():
             for sets in player_data[i][2]:
                 for card in potential_discard:
                     if card[0][:-1] == sets[:-1]:
-                        if player_data[turn_index + 1][3] == True:
+                        if player_data[(turn_index + 1) % 4][3] == True:
                             potential_discard.remove(card)
                             print("removed ", card, " from pot discards")
     if len(potential_discard) == 0 and len(player_data[turn_index][1]) > 1:
