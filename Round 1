@@ -123,7 +123,7 @@ def lay_down_sets():
                 if len(sets) < 2:
                     backup = sets
             if len(sets) < 2:
-                sets = backkup
+                sets = backup
         lowest_set = None
         for set_cards in sets:
             if lowest_set is None or ranks.index(set_cards[0][:-1]) < ranks.index(lowest_set[0][:-1]):
