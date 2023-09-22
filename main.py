@@ -1,8 +1,9 @@
+from collections import deque
 import random
 
 # Initialize the cards
 suits = ['H', 'D', 'C', 'S']
-ranks = list(range(1, 13))
+ranks = [str(rank) for rank in range(1, 14)]  # Convert ranks to strings
 deck = [(rank, suit) for rank in ranks for suit in suits]
 
 # Function to create the draw pile
@@ -53,6 +54,7 @@ class Round_Objective:
 
     def next_round(self):
         self.round += 1
+        players.rotate(-1)
 
 class Player:
     def __init__(self, name):
@@ -89,38 +91,53 @@ def score_hand(hand):
     score = 0
     for card in hand:
         suit, rank = card
-        if rank == 3 and suit in ['D', 'H']:  # Red 3's
+        if rank == '3' and suit in ['D', 'H']:  # Red 3's
             score += 20
-        elif 2 <= rank <= 9:
-            score += rank
-        elif rank == 1:  # Ace
+        elif '2' <= rank <= '9':
+            score += int(rank)
+        elif rank == '1':  # Ace
             score += 15
-        elif rank == 10 or rank >= 11:  # 10, Jack, Queen, King
+        elif rank in ['10', '11', '12', '13']:  # 10, Jack, Queen, King
             score += 10
     return score
-
+    
 # Create four computer players
 alice = Player("Alice")
 bob = Player("Bob")
 charlie = Player("Charlie")
 dawn = Player("Dawn")
+players = deque([alice, bob, charlie, dawn])
 
-# Initialize the RequisiteCollections class
+# Initialize the Round Objective class
 objective = Round_Objective()
 
-for round_number in range(1, 8):
+for round_number in range(1, 7):
     print(f"\n--- Round {round_number} ---")
 
     # Set up the required collections for the current round
     objective.round = round_number
     round_sets, round_runs = objective.get_objective()
     print(f"Required Sets: {round_sets}, Required Runs: {round_runs}")
-    print("Draw pile: ", draw_pile)
+    
+    # Display the draw pile
+    draw_pile_formatted = [f"{rank}{suit}" for rank, suit in reversed(draw_pile)]
+    print("Draw pile: ", draw_pile_formatted)
+    
     # Shuffle the draw pile and distribute 10 cards to each player
-    for player in [alice, bob, charlie, dawn]:
-        for _ in range(10):
+    c = 1
+    while c < 11:
+        for player in players:
             player.draw_card(draw_pile)
+        c += 1
 
     # Display each player's initial hand
-    for player in [alice, bob, charlie, dawn]:
-        print(f"{player.name}'s Hand: {player.hand}")
+    for player in players:
+        player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
+        sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
+        print(f"{player.name}'s Hand: {sorted_hand}")
+    
+    for player in players:
+        player.hand = []
+    draw_pile = create_draw_pile(num_decks)
+    discard_pile = []
+    objective.next_round()
