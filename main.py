@@ -122,23 +122,23 @@ class Player:
             rank_cards = [card for card in self.hand]
             potential_discard.append(rank_cards)
         else:
-            for rank in ranks:
+            for rank in reversed(ranks):  # Reverse to prioritize high-ranking cards
                 self.hand.sort(key=lambda card: ranks.index(card[0]))
                 rank_cards = [card for card in self.hand if card[0].startswith(rank)]
                 if len(rank_cards) == 1:
                     potential_discard.append(rank_cards)
             if not potential_discard:
-                for rank in ranks:
+                for rank in reversed(ranks):
                     rank_cards = [card for card in self.hand if card[0].startswith(rank)]
                     if len(rank_cards) == 4 or len(rank_cards) == 5:
                         potential_discard.append(rank_cards)
             if not potential_discard:
-                for rank in ranks:
+                for rank in reversed(ranks):
                     rank_cards = [card for card in self.hand if card[0].startswith(rank)]
                     if len(rank_cards) == 2:
                         potential_discard.append(rank_cards)
             if not potential_discard:
-                for rank in ranks:
+                for rank in reversed(ranks):
                     rank_cards = [card for card in self.hand if card[0].startswith(rank)]
                     if len(rank_cards) == 3:
                         potential_discard.append(rank_cards)
@@ -161,7 +161,7 @@ class Player:
                 discard_pile.append(card)
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
-
+                
     def buy_from_discard(self, discard_pile, draw_pile):
         if self.buys < 3:
             if discard_pile:
