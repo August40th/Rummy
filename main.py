@@ -90,7 +90,7 @@ class Player:
 def score_hand(hand):
     score = 0
     for card in hand:
-        suit, rank = card
+        rank, suit = card  # Unpack the card tuple
         if rank == '3' and suit in ['D', 'H']:  # Red 3's
             score += 20
         elif '2' <= rank <= '9':
@@ -135,8 +135,11 @@ for round_number in range(1, 7):
         player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
         sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
         print(f"{player.name}'s Hand: {sorted_hand}")
-    
+
+    # End round
     for player in players:
+        player.cumulative_score += score_hand(player.hand)
+        print(f"{player.name}'s Score: {player.cumulative_score}")
         player.hand = []
     draw_pile = create_draw_pile(num_decks)
     discard_pile = []
