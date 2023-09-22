@@ -1,6 +1,17 @@
 from collections import deque
 import random
 
+# Optional Rules
+Wild_Red_3s = False
+Strict_Buy = False
+Turn_Order_Buy = False
+Buy_Clock = True
+Self_Discard_Buy = False
+Wrap_Around_Runs = False
+Kain_Lay_Down = False
+Exta_Deck = False
+Soft_Shanghai = False
+
 # Initialize the cards
 suits = ['H', 'D', 'C', 'S']
 ranks = [str(rank) for rank in range(1, 14)]  # Convert ranks to strings
@@ -70,7 +81,7 @@ class Player:
             drawn_card = draw_pile.pop()
             self.hand.append(drawn_card)
     
-    def draw_card(self, draw_pile, discard_pile): # 2 setss
+    def draw_card(self, draw_pile, discard_pile): # 2 sets
         print("\n" + self.name + "'s turn to draw") 
         self.hand.sort(key=lambda card: ranks.index(card[0]), reverse=True)
         print(self.name, "'s Hand:", [f"{rank}{suit}" for rank, suit in self.hand])
