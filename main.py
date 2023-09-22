@@ -62,6 +62,7 @@ class Player:
         self.hand = []
         self.buys = 0
         self.laid_down = False
+        self.play_area = []
         self.cumulative_score = 0
         
     def deal_card(self):
@@ -69,7 +70,7 @@ class Player:
             drawn_card = draw_pile.pop()
             self.hand.append(drawn_card)
     
-    def draw_card(self, draw_pile, discard_pile):
+    def draw_card(self, draw_pile, discard_pile): # 2 setss
         print("\n" + self.name + "'s turn to draw") 
         self.hand.sort(key=lambda card: ranks.index(card[0]), reverse=True)
         print(self.name, "'s Hand:", [f"{rank}{suit}" for rank, suit in self.hand])
@@ -111,7 +112,7 @@ class Player:
     
         cards_match.clear()
         
-    def discard_card(self, discard_pile):
+    def discard_card(self, discard_pile): #2 sets
         discard_choice = None
         pairs = []
         sets = []
@@ -162,7 +163,7 @@ class Player:
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
                 
-    def buy_from_discard(self, discard_pile, draw_pile):
+    def buy_from_discard(self, discard_pile, draw_pile): #Needs strategy
         if self.buys < 3:
             if discard_pile:
                 card_from_discard = discard_pile.pop()
@@ -196,7 +197,7 @@ players = deque([alice, bob, charlie, dawn])
 # Initialize the Round Objective class
 objective = Round_Objective()
 
-for round_number in range(1, 7):
+for round_number in range(1, 8):
     print(f"\n--- Round {round_number} ---")
 
     # Set up the required collections for the current round
@@ -208,7 +209,7 @@ for round_number in range(1, 7):
     draw_pile_formatted = [f"{rank}{suit}" for rank, suit in reversed(draw_pile)]
     print("Draw pile: ", draw_pile_formatted)
     
-    # Shuffle the draw pile and distribute 10 cards to each player
+    # Deal 10 cards to each player
     c = 1
     while c < 11:
         for player in players:
@@ -220,17 +221,18 @@ for round_number in range(1, 7):
         player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
         sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
         print(f"{player.name}'s Hand: {sorted_hand}")
-        player.draw_card(draw_pile, discard_pile)
+        player.draw_card(draw_pile, discard_pile) #player draws card
         player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
         sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
         print(f"{player.name}'s Hand: {sorted_hand}")
-        player.discard_card(discard_pile)
+        player.discard_card(discard_pile) #player discards
 
     # End round
-    for player in players:
+    for player in players: #Score and empty player hands and play area
         player.cumulative_score += score_hand(player.hand)
         print(f"{player.name}'s Score: {player.cumulative_score}")
         player.hand = []
+    #Reshuffle draw pile, empty discard pile
     draw_pile = create_draw_pile(num_decks)
     discard_pile = []
     objective.next_round()
