@@ -243,10 +243,16 @@ class Player:
                 discard_pile.append(card)
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
-    
-    def lay_down(self, hand): # Play highest scoring runs and sets
+                
+    def lay_down(self, round_sets, round_runs): #lay down highest scoring runs and sets that match round objective, incomplete
+        if len(self.complete_sets) >= round_sets and len(self.complete_runs) >= round_runs:
+            # Add the logic for laying down the sets
+            for rank, cards in self.complete_sets.items():
+                self.play_area.extend(cards)  # Place cards in the play_area
+                self.hand = [card for card in self.hand if card not in cards]  # Remove cards from the hand
+                print(f"{self.name} laid down {', '.join(card[0] + card[1] for card in cards)}")
 
-    def play_cards(self, hand): # Play any cards from hand that maximize cards played
+  #  def play_cards(self, hand): # Play any cards from hand that maximize cards played
                 
     def buy_from_discard(self, discard_pile, draw_pile): #Needs strategy
         if self.buys < 3:
@@ -308,6 +314,8 @@ for round_number in range(1, 8):
             player.draw_card(draw_pile, discard_pile) #player draws card
             sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
             print(f"{player.name}'s Hand: {sorted_hand}")
+            player.group_cards()
+            player.lay_down(round_sets, round_runs)
             player.discard_card(discard_pile) #player discards
             
     # End round
