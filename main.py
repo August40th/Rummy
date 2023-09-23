@@ -151,7 +151,7 @@ class Player:
             formatted_cards = [f"{card[0]}{card[1]}" for card in cards]
             print(f"{' '.join(formatted_cards)}")
     
-    def draw_card(self, draw_pile, discard_pile): # 2 sets
+    def draw_card(self, draw_pile, discard_pile): # Draw logic for 2 sets, incomplete
         print("\n" + self.name + "'s turn to draw") 
         self.hand.sort(key=lambda card: ranks.index(card[0]), reverse=True)
         print(self.name, "'s Hand:", [f"{rank}{suit}" for rank, suit in self.hand])
@@ -193,7 +193,7 @@ class Player:
     
         cards_match.clear()
         
-    def discard_card(self, discard_pile): #2 sets
+    def discard_card(self, discard_pile): # Discard logic for 2 sets, incomplete
         discard_choice = None
         pairs = []
         sets = []
@@ -243,6 +243,10 @@ class Player:
                 discard_pile.append(card)
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
+    
+    def lay_down(self, hand): # Play highest scoring runs and sets
+
+    def play_cards(self, hand): # Play any cards from hand that maximize cards played
                 
     def buy_from_discard(self, discard_pile, draw_pile): #Needs strategy
         if self.buys < 3:
