@@ -41,7 +41,7 @@ def reshuffle(draw_pile, discard_pile):
 
 class Round_Objective:
     def __init__(self):
-        self.round = 0
+        self.round = 1
 
     def get_objective(self):
         sets, runs = 0, 0
@@ -243,6 +243,7 @@ class Player:
                 discard_pile.append(card)
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
+                
     def lay_down(self, round_sets, round_runs):
         if not self.laid_down:  # Check if the player hasn't already laid down
             if len(self.complete_sets) >= round_sets and len(self.complete_runs) >= round_runs:
@@ -285,15 +286,17 @@ charlie = Player("Charlie")
 dawn = Player("Dawn")
 players = deque([alice, bob, charlie, dawn])
 
-# Initialize the Round Objective class
-objective = Round_Objective()
+# Create a Round_Objective object
+round_objective = Round_Objective()
 
-for round_number in range(1): # 8):
+# Initialize and start the first round
+round_number = 1
+
+while round_number <= 2:  # Play seven rounds
     print(f"\n--- Round {round_number} ---")
 
     # Set up the required collections for the current round
-    objective.round = round_number
-    round_sets, round_runs = objective.get_objective()
+    round_sets, round_runs = round_objective.get_objective()
     print(f"Required Sets: {round_sets}, Required Runs: {round_runs}")
     
     # Display the draw pile
@@ -328,4 +331,5 @@ for round_number in range(1): # 8):
     #Reshuffle draw pile, empty discard pile
     draw_pile = create_draw_pile(num_decks)
     discard_pile = []
-    objective.next_round()
+    round_objective.next_round()
+    round_number += 1
