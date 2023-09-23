@@ -14,7 +14,7 @@ Soft_Shanghai = False
 
 # Initialize the cards
 suits = ['H', 'D', 'C', 'S']
-ranks = [str(rank) for rank in range(1, 14)]  # Convert ranks to strings
+ranks = [str(rank) for rank in range(2, 15)]  # Convert ranks to strings
 deck = [(rank, suit) for rank in ranks for suit in suits]
 
 # Function to create the draw pile
@@ -262,7 +262,7 @@ def score_hand(hand):
             score += 20
         elif '2' <= rank <= '9':
             score += int(rank)
-        elif rank == '1':  # Ace
+        elif rank == '14':  # Ace
             score += 15
         elif rank in ['10', '11', '12', '13']:  # 10, Jack, Queen, King
             score += 10
@@ -298,18 +298,14 @@ for round_number in range(1, 8):
         c += 1
 
     # Display each player's initial hand
-    for player in players:
-        player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
-        sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
-        print(f"{player.name}'s Hand: {sorted_hand}")
-        player.draw_card(draw_pile, discard_pile) #player draws card
-        player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
-        sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
-        print(f"{player.name}'s Hand: {sorted_hand}")
-        player.group_cards()
-        player.print_groups()
-        player.discard_card(discard_pile) #player discards
-
+    for _ in range(10):
+        for player in players:
+            player.hand = sorted(player.hand, key=lambda card: (card[0], card[1]))
+            player.draw_card(draw_pile, discard_pile) #player draws card
+            sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
+            print(f"{player.name}'s Hand: {sorted_hand}")
+            player.discard_card(discard_pile) #player discards
+            
     # End round
     for player in players: #Score and empty player hands and play area
         player.cumulative_score += score_hand(player.hand)
