@@ -244,13 +244,14 @@ class Player:
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
                 
-    def lay_down(self, round_sets, round_runs): #lay down highest scoring runs and sets that match round objective, incomplete
-        if len(self.complete_sets) >= round_sets and len(self.complete_runs) >= round_runs:
-            # Add the logic for laying down the sets
-            for rank, cards in self.complete_sets.items():
-                self.play_area.extend(cards)  # Place cards in the play_area
-                self.hand = [card for card in self.hand if card not in cards]  # Remove cards from the hand
-                print(f"{self.name} laid down {', '.join(card[0] + card[1] for card in cards)}")
+     def lay_down(self, round_sets, round_runs):
+         if not self.laid_down:  # Check if the player hasn't already laid down
+            if len(self.complete_sets) >= round_sets and len(self.complete_runs) >= round_runs:
+                for rank, cards in self.complete_sets.items():
+                    self.play_area.extend(cards)  # Place cards in the play_area
+                    self.hand = [card for card in self.hand if card not in cards]  # Remove cards from the hand
+                    print(f"{self.name} laid down {', '.join(card[0] + card[1] for card in cards)}")
+                self.laid_down = True  # Mark the player as having laid down
 
   #  def play_cards(self, hand): # Play any cards from hand that maximize cards played
                 
