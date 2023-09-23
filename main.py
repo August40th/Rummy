@@ -244,8 +244,8 @@ class Player:
                 self.hand.remove(card)
                 print(self.name + " discarded", f"{card[0]}{card[1]}")
                 
-     def lay_down(self, round_sets, round_runs):
-         if not self.laid_down:  # Check if the player hasn't already laid down
+    def lay_down(self, round_sets, round_runs):
+        if not self.laid_down:  # Check if the player hasn't already laid down
             if len(self.complete_sets) >= round_sets and len(self.complete_runs) >= round_runs:
                 for rank, cards in self.complete_sets.items():
                     self.play_area.extend(cards)  # Place cards in the play_area
