@@ -288,7 +288,7 @@ players = deque([alice, bob, charlie, dawn])
 # Initialize the Round Objective class
 objective = Round_Objective()
 
-for round_number in range(1, 8):
+for round_number in range(1): # 8):
     print(f"\n--- Round {round_number} ---")
 
     # Set up the required collections for the current round
@@ -315,6 +315,8 @@ for round_number in range(1, 8):
             sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
             print(f"{player.name}'s Hand: {sorted_hand}")
             player.group_cards()
+            if player.laid_down:
+                print(f"{player.name}'s Play Area: {player.play_area}")
             player.lay_down(round_sets, round_runs)
             player.discard_card(discard_pile) #player discards
             
