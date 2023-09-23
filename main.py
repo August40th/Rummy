@@ -71,6 +71,9 @@ class Player:
     def __init__(self, name):
         self.name = name
         self.hand = []
+        self.complete_runs = {}
+        self.complete_sets = {}
+        self.pairs = {}
         self.buys = 0
         self.laid_down = False
         self.play_area = []
@@ -80,6 +83,73 @@ class Player:
         if draw_pile:
             drawn_card = draw_pile.pop()
             self.hand.append(drawn_card)
+
+    def group_cards(self):
+        self.complete_runs = {}
+        self.complete_sets = {}
+        self.pairs = {}
+
+        # Identify complete runs
+        run_candidate = []
+        current_suit = None
+
+        for card in self.hand:
+            rank = card[0]
+            suit = card[1]
+
+            if current_suit is None:
+                current_suit = suit
+
+            if suit == current_suit and (not run_candidate or int(rank) == int(run_candidate[-1][0]) + 1):
+                run_candidate.append(card)
+            else:
+                if len(run_candidate) >= 4:  # A complete run needs at least 4 cards
+                    if current_suit in self.complete_runs:
+                        self.complete_runs[current_suit].append(run_candidate)
+                    else:
+                        self.complete_runs[current_suit] = [run_candidate]
+                run_candidate = [card]
+                current_suit = suit
+
+        # Check the last run candidate
+        if len(run_candidate) >= 4:
+            if current_suit in self.complete_runs:
+                self.complete_runs[current_suit].append(run_candidate)
+            else:
+                self.complete_runs[current_suit] = [run_candidate]
+
+        # Identify complete sets and pairs
+        rank_count = {}
+        for card in self.hand:
+            rank = card[0]
+            if rank in rank_count:
+                rank_count[rank] += 1
+            else:
+                rank_count[rank] = 1
+
+        # Group complete sets and identify pairs
+        for rank, count in rank_count.items():
+            if count >= 3:  # A set requires at least 3 cards with the same rank
+                self.complete_sets[rank] = [card for card in self.hand if card[0] == rank]
+            elif count == 2:  # A pair consists of exactly 2 cards with the same rank
+                self.pairs[rank] = [card for card in self.hand if card[0] == rank]
+                
+    def print_groups(self):
+        print("Complete Runs:")
+        for suit, runs in self.complete_runs.items():
+            for run in runs:
+                formatted_run = [f"{card[0]}{card[1]}" for card in run]
+                print(f"{suit}: {'-'.join(formatted_run)}")
+
+        print("\nComplete Sets:")
+        for rank, cards in self.complete_sets.items():
+            formatted_cards = [f"{card[0]}{card[1]}" for card in cards]
+            print(f"{' '.join(formatted_cards)}")
+
+        print("\nPairs:")
+        for rank, cards in self.pairs.items():
+            formatted_cards = [f"{card[0]}{card[1]}" for card in cards]
+            print(f"{' '.join(formatted_cards)}")
     
     def draw_card(self, draw_pile, discard_pile): # 2 sets
         print("\n" + self.name + "'s turn to draw") 
@@ -236,6 +306,8 @@ for round_number in range(1, 8):
         player.hand = sorted(player.hand, key=lambda card: (card[1], card[0]))
         sorted_hand = [f"{rank}{suit}" for rank, suit in player.hand]  # Format cards as rank and suit without space
         print(f"{player.name}'s Hand: {sorted_hand}")
+        player.group_cards()
+        player.print_groups()
         player.discard_card(discard_pile) #player discards
 
     # End round
